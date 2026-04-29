@@ -170,16 +170,20 @@
     }
 
     .link-item {
-      display: block;
-      color: #60a5fa;
+      display: inline-block;
+      color: #fff;
+      background: #1e3a5f;
       font-size: 0.8rem;
       text-decoration: none;
-      padding: 4px 0;
-      word-break: break-all;
-      transition: color 0.2s;
+      padding: 8px 14px;
+      border-radius: 6px;
+      margin: 4px 4px 4px 0;
+      transition: background 0.2s;
     }
 
-    .link-item:hover { color: #93bbfd; }
+    .link-item:hover { background: #2a5080; }
+
+    .link-label { font-weight: 600; }
 
     .snippet {
       font-size: 0.8rem;
@@ -312,8 +316,8 @@
         : '<span style="color:#555;font-size:0.85rem;">No OTP found</span>';
 
       const linksHtml = r.links && r.links.length > 0
-        ? r.links.slice(0, 10).map((l) => `<a class="link-item" href="${esc(l)}" target="_blank">${esc(truncUrl(l))}</a>`).join("")
-        : '<span style="color:#555;font-size:0.8rem;">No links found</span>';
+        ? r.links.slice(0, 10).map((l) => `<a class="link-item" href="${esc(l.url || l)}" target="_blank"><span class="link-label">${esc(l.label || 'Link')}</span></a>`).join("")
+        : '<span style="color:#555;font-size:0.8rem;">No action links found</span>';
 
       const dateStr = formatDate(r.date);
 
