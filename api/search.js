@@ -21,14 +21,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email } = req.body;
+    const { email, days } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    // Search Gmail for emails sent to this address
-    const query = `to:${email} newer_than:1d`;
+    const timeRange = `newer_than:${days || 1}d`;
+    let query;
+
+    if (email.includes("@")) {
+      // Full email: search emails sent TO this address
+      query = `to:${email} ${timeRange}`;
+    } else {
+      // Keyword (e.g. "netflix"): search from/subject/to
+      query = `{from:${email} subject:${email} to:${email}} ${timeRange}`;
+    }
+
     const results = await grabOTP(GMAIL_CONFIG, query);
 
     return res.status(200).json({ ok: true, results });
