@@ -1,0 +1,14 @@
+{
+  "name": "gmail-otp-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot that grabs OTP codes from Gmail via API",
+  "type": "module",
+  "scripts": {
+    "start": "node get-refresh-token.js",
+    "dev": "node local-test.js"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "open": "^10.1.0"
+  }
+}
