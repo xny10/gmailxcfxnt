@@ -28,14 +28,13 @@ export default async function handler(req, res) {
     }
 
     const timeRange = `newer_than:${days || 1}d`;
+    const exclude = `-subject:"reset password" -subject:"reset your password" -subject:"password reset" -subject:"change password" -subject:"ubah password" -subject:"atur ulang kata sandi"`;
     let query;
 
     if (email.includes("@")) {
-      // Full email: search emails sent TO this address
-      query = `to:${email} ${timeRange}`;
+      query = `to:${email} ${timeRange} ${exclude}`;
     } else {
-      // Keyword (e.g. "netflix"): search from/subject/to
-      query = `{from:${email} subject:${email} to:${email}} ${timeRange}`;
+      query = `{from:${email} subject:${email} to:${email}} ${timeRange} ${exclude}`;
     }
 
     const results = await grabOTP(GMAIL_CONFIG, query);
