@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gmail OTP Grabber</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 40px auto;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    input[type="email"] {
+      flex: 1;
+      padding: 12px 16px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="email"]:focus {
+      border-color: #e50914;
+    }
+
+    input[type="email"]::placeholder {
+      color: #555;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #e50914;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    button:hover { background: #f6121d; }
+    button:disabled {
+      background: #333;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 32px;
+      color: #888;
+    }
+
+    .spinner.active { display: block; }
+
+    .spinner .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e50914;
+      margin: 0 4px;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .spinner .dot:nth-child(1) { animation-delay: -0.32s; }
+    .spinner .dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    .results { display: flex; flex-direction: column; gap: 16px; }
+
+    .email-card {
+      background: #1a1a1a;
+      border: 1px solid #262626;
+      border-radius: 10px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .email-card:hover { border-color: #333; }
+
+    .email-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+
+    .email-subject {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .email-date {
+      font-size: 0.75rem;
+      color: #666;
+      white-space: nowrap;
+    }
+
+    .email-from {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .otp-badge {
+      display: inline-block;
+      background: #e50914;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      letter-spacing: 2px;
+      margin: 4px 4px 4px 0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .otp-badge:hover { background: #f6121d; }
+    .otp-badge.copied { background: #16a34a; }
+
+    .section-label {
+      font-size: 0.75rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 12px 0 6px;
+    }
+
+    .link-item {
+      display: block;
+      color: #60a5fa;
+      font-size: 0.8rem;
+      text-decoration: none;
+      padding: 4px 0;
+      word-break: break-all;
+      transition: color 0.2s;
+    }
+
+    .link-item:hover { color: #93bbfd; }
+
+    .snippet {
+      font-size: 0.8rem;
+      color: #777;
+      margin-top: 10px;
+      line-height: 1.5;
+      border-top: 1px solid #262626;
+      padding-top: 10px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #555;
+    }
+
+    .empty-icon { font-size: 2rem; margin-bottom: 8px; }
+
+    .error {
+      background: #1c0a0a;
+      border: 1px solid #e50914;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #f87171;
+      font-size: 0.85rem;
+    }
+
+    .copy-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #16a34a;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gmail OTP Grabber</h1>
+    <p class="subtitle">Enter Netflix email to fetch OTP codes & links</p>
+
+    <div class="form-group">
+      <input
+        type="email"
+        id="emailInput"
+        placeholder="example@netflix.com"
+        autocomplete="off"
+      />
+      <button id="searchBtn" onclick="search()">Search</button>
+    </div>
+
+    <div class="spinner" id="spinner">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <p style="margin-top: 12px;">Searching Gmail...</p>
+    </div>
+
+    <div class="results" id="results"></div>
+  </div>
+
+  <div class="copy-toast" id="toast">Copied!</div>
+
+  <script>
+    const input = document.getElementById("emailInput");
+    const btn = document.getElementById("searchBtn");
+    const spinner = document.getElementById("spinner");
+    const resultsDiv = document.getElementById("results");
+    const toast = document.getElementById("toast");
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") search();
+    });
+
+    async function search() {
+      const email = input.value.trim();
+      if (!email) return input.focus();
+
+      btn.disabled = true;
+      spinner.classList.add("active");
+      resultsDiv.innerHTML = "";
+
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) throw new Error(data.error || "Unknown error");
+
+        if (data.results.length === 0) {
+          resultsDiv.innerHTML = `
+            <div class="empty">
+              <div class="empty-icon">📭</div>
+              <p>No emails found for <strong>${esc(email)}</strong></p>
+              <p style="margin-top:4px;font-size:0.8rem;">Try a different email or wait for new messages</p>
+            </div>`;
+          return;
+        }
+
+        resultsDiv.innerHTML = data.results.map((r) => renderCard(r)).join("");
+
+      } catch (err) {
+        resultsDiv.innerHTML = `<div class="error">Error: ${esc(err.message)}</div>`;
+      } finally {
+        btn.disabled = false;
+        spinner.classList.remove("active");
+      }
+    }
+
+    function renderCard(r) {
+      const otpHtml = r.codes.length > 0
+        ? r.codes.map((c) => `<span class="otp-badge" onclick="copyOTP(this, '${c}')">${c}</span>`).join("")
+        : '<span style="color:#555;font-size:0.85rem;">No OTP found</span>';
+
+      const linksHtml = r.links && r.links.length > 0
+        ? r.links.slice(0, 10).map((l) => `<a class="link-item" href="${esc(l)}" target="_blank">${esc(truncUrl(l))}</a>`).join("")
+        : '<span style="color:#555;font-size:0.8rem;">No links found</span>';
+
+      const dateStr = formatDate(r.date);
+
+      return `
+        <div class="email-card">
+          <div class="email-header">
+            <span class="email-subject">${esc(r.subject || "(No subject)")}</span>
+            <span class="email-date">${esc(dateStr)}</span>
+          </div>
+          <div class="email-from">${esc(r.from)}</div>
+
+          <div class="section-label">OTP Code</div>
+          <div>${otpHtml}</div>
+
+          <div class="section-label">Links</div>
+          <div>${linksHtml}</div>
+
+          <div class="snippet">${esc(r.snippet)}</div>
+        </div>`;
+    }
+
+    function copyOTP(el, code) {
+      navigator.clipboard.writeText(code);
+      el.classList.add("copied");
+      el.textContent = "Copied!";
+      showToast(code);
+      setTimeout(() => {
+        el.classList.remove("copied");
+        el.textContent = code;
+      }, 1500);
+    }
+
+    function showToast(code) {
+      toast.textContent = `Copied: ${code}`;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+
+    function esc(s) {
+      const d = document.createElement("div");
+      d.textContent = s || "";
+      return d.innerHTML;
+    }
+
+    function truncUrl(url) {
+      return url.length > 80 ? url.substring(0, 77) + "..." : url;
+    }
+
+    function formatDate(str) {
+      try {
+        const d = new Date(str);
+        return d.toLocaleString("en-GB", {
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit",
+        });
+      } catch { return str; }
+    }
+  </script>
+</body>
+</html>
