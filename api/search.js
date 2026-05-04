@@ -21,13 +21,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, days } = req.body;
+    const { email } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    const timeRange = `newer_than:${days || 1}d`;
+    const timeRange = `newer_than:1d`;
     const exclude = `-subject:"reset password" -subject:"reset your password" -subject:"password reset" -subject:"change password" -subject:"ubah password" -subject:"atur ulang kata sandi"`;
     let query;
 
