@@ -30,7 +30,12 @@ try {
       console.log(`   From: ${r.from}`);
       console.log(`   Date: ${r.date}`);
       console.log(`   OTP Codes: ${r.codes.length > 0 ? r.codes.join(", ") : "none"}`);
-      console.log(`   Snippet: ${r.snippet}`);
+      console.log(`   Button Links:`);
+      if (r.links && r.links.length > 0) {
+        r.links.forEach((l) => console.log(`     • [${l.label}] ${l.url.substring(0, 100)}...`));
+      } else {
+        console.log(`     none`);
+      }
       console.log();
     }
 
